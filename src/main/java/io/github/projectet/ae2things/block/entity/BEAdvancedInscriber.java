@@ -27,21 +27,22 @@ import appeng.util.inv.CombinedInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
 import io.github.projectet.ae2things.AE2Things;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
+
 import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.block.BlockState;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IGridTickable, IUpgradeableObject {
 
@@ -128,7 +129,7 @@ public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IG
     }
 
     @Override
-    protected boolean readFromStream(FriendlyByteBuf data) {
+    protected boolean readFromStream(PacketByteBuf data) {
         var c = super.readFromStream(data);
 
         var oldWorking = isWorking();
@@ -139,7 +140,7 @@ public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IG
         }
 
         for (int i = 0; i < this.inv.size(); i++) {
-            this.inv.setItemDirect(i, data.readItem());
+            this.inv.setItemDirect(i, data.readItemStack());
         }
         this.cachedTask = null;
 
@@ -147,18 +148,18 @@ public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IG
     }
 
     @Override
-    protected void writeToStream(FriendlyByteBuf data) {
+    protected void writeToStream(PacketByteBuf data) {
         super.writeToStream(data);
 
         data.writeBoolean(isWorking());
         for (int i = 0; i < this.inv.size(); i++) {
-            data.writeItem(inv.getStackInSlot(i));
+            data.writeItemStack(inv.getStackInSlot(i));
         }
     }
 
     @Nullable
     @Override
-    public InternalInventory getSubInventory(ResourceLocation id) {
+    public InternalInventory getSubInventory(Identifier id) {
         if (id.equals(ISegmentedInventory.STORAGE)) {
             return this.getInternalInventory();
         } else if (id.equals(ISegmentedInventory.UPGRADES)) {
@@ -170,7 +171,7 @@ public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IG
 
     @Nullable
     public InscriberRecipe getTask() {
-        if (this.cachedTask == null && level != null) {
+        if (this.cachedTask == null && world != null) {
             ItemStack input = this.sideItemHandler.getStackInSlot(0);
             ItemStack plateA = this.topItemHandler.getStackInSlot(0);
             ItemStack plateB = this.botItemHandler.getStackInSlot(0);
@@ -178,25 +179,25 @@ public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IG
                 return null; // No input to handle
             }
 
-            this.cachedTask = InscriberRecipes.findRecipe(level, input, plateA, plateB, true);
+            this.cachedTask = InscriberRecipes.findRecipe(world, input, plateA, plateB, true);
         }
         return this.cachedTask;
     }
 
     @Override
-    public void saveAdditional(CompoundTag data) {
-        super.saveAdditional(data);
+    public void writeNbt(NbtCompound data) {
+        super.writeNbt(data);
         this.upgrades.writeToNBT(data, "upgrades");
     }
 
     @Override
-    public void loadTag(CompoundTag data) {
+    public void loadTag(NbtCompound data) {
         super.loadTag(data);
         this.upgrades.readFromNBT(data, "upgrades");
     }
 
     @Override
-    public void addAdditionalDrops(Level level, BlockPos pos, List<ItemStack> drops) {
+    public void addAdditionalDrops(World level, BlockPos pos, List<ItemStack> drops) {
         super.addAdditionalDrops(level, pos, drops);
 
         for (var upgrade : upgrades) {
@@ -265,7 +266,7 @@ public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IG
                 this.setProcessingTime(this.getMaxProcessingTime());
                 final InscriberRecipe out = this.getTask();
                 if (out != null) {
-                    final ItemStack outputCopy = out.getResultItem().copy();
+                    final ItemStack outputCopy = out.getOutput(null).copy(); // Pristine Small Line Change
                     if (this.sideItemHandler.insertItem(1, outputCopy, true).isEmpty()) {
                         this.sideItemHandler.insertItem(1, outputCopy, false);
                         this.setProcessingTime(0);
@@ -324,7 +325,7 @@ public class BEAdvancedInscriber extends AENetworkPowerBlockEntity implements IG
             if (inv == topItemHandler)
                 top = stack;
 
-            for (var recipe : InscriberRecipes.getRecipes(getLevel())) {
+            for (var recipe : InscriberRecipes.getRecipes(getWorld())) {
                 if (!middle.isEmpty() && !recipe.getMiddleInput().test(middle)) {
                     continue;
                 }

@@ -6,12 +6,11 @@ import appeng.api.storage.cells.ISaveProvider;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.Tooltips;
 import io.github.projectet.ae2things.item.DISKDrive;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.world.item.ItemStack;
-
 import java.util.List;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public class DISKCellHandler implements ICellHandler {
 
@@ -27,14 +26,14 @@ public class DISKCellHandler implements ICellHandler {
         return DISKCellInventory.createInventory(is, container);
     }
 
-    public void addCellInformationToTooltip(ItemStack stack, List<Component> lines) {
+    public void addCellInformationToTooltip(ItemStack stack, List<Text> lines) {
         var handler = getCellInventory(stack, null);
 
         if(handler == null)
             return;
 
         if(handler.hasDiskUUID()) {
-            lines.add(new TextComponent("Disk UUID: ").withStyle(ChatFormatting.GRAY).append(new TextComponent(handler.getDiskUUID().toString()).withStyle(ChatFormatting.AQUA)));
+            lines.add(Text.literal("Disk UUID: ").formatted(Formatting.GRAY).append(Text.literal(handler.getDiskUUID().toString()).formatted(Formatting.AQUA)));
             lines.add(Tooltips.bytesUsed(handler.getNbtItemCount(), handler.getTotalBytes()));
         }
 

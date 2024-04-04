@@ -1,34 +1,34 @@
 package io.github.projectet.ae2things.util;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.PersistentState;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class StorageManager extends SavedData {
+public class StorageManager extends PersistentState {
     private final Map<UUID, DataStorage> disks;
 
     public StorageManager() {
         disks = new HashMap<>();
-        this.setDirty();
+        this.markDirty();
     }
 
     private StorageManager(Map<UUID, DataStorage> disks) {
         this.disks = disks;
-        this.setDirty();
+        this.markDirty();
     }
 
     @Override
-    public CompoundTag save(CompoundTag nbt) {
-        ListTag diskList = new ListTag();
+    public NbtCompound writeNbt(NbtCompound nbt) {
+        NbtList diskList = new NbtList();
         for (Map.Entry<UUID, DataStorage> entry : disks.entrySet()) {
-            CompoundTag disk = new CompoundTag();
+            NbtCompound disk = new NbtCompound();
 
-            disk.putUUID(Constants.DISKUUID, entry.getKey());
+            disk.putUuid(Constants.DISKUUID, entry.getKey());
             disk.put(Constants.DISKDATA, entry.getValue().toNbt());
             diskList.add(disk);
         }
@@ -37,24 +37,24 @@ public class StorageManager extends SavedData {
         return nbt;
     }
 
-    public static StorageManager readNbt(CompoundTag nbt) {
+    public static StorageManager readNbt(NbtCompound nbt) {
         Map<UUID, DataStorage> disks = new HashMap<>();
-        ListTag diskList = nbt.getList(Constants.DISKLIST, CompoundTag.TAG_COMPOUND);
+        NbtList diskList = nbt.getList(Constants.DISKLIST, NbtCompound.COMPOUND_TYPE);
         for(int i = 0; i < diskList.size(); i++) {
-            CompoundTag disk = diskList.getCompound(i);
-            disks.put(disk.getUUID(Constants.DISKUUID), DataStorage.fromNbt(disk.getCompound(Constants.DISKDATA)));
+            NbtCompound disk = diskList.getCompound(i);
+            disks.put(disk.getUuid(Constants.DISKUUID), DataStorage.fromNbt(disk.getCompound(Constants.DISKDATA)));
         }
         return new StorageManager(disks);
     }
 
     public void updateDisk(UUID uuid, DataStorage dataStorage) {
         disks.put(uuid, dataStorage);
-        setDirty();
+        markDirty();
     }
 
     public void removeDisk(UUID uuid) {
         disks.remove(uuid);
-        setDirty();
+        markDirty();
     }
 
     public boolean hasUUID(UUID uuid) {
@@ -68,7 +68,7 @@ public class StorageManager extends SavedData {
         return disks.get(uuid);
     }
 
-    public void modifyDisk(UUID diskID, ListTag stackKeys, long[] stackAmounts, long itemCount) {
+    public void modifyDisk(UUID diskID, NbtList stackKeys, long[] stackAmounts, long itemCount) {
         DataStorage diskToModify = getOrCreateDisk(diskID);
         if(stackKeys != null && stackAmounts != null) {
             diskToModify.stackKeys = stackKeys;
@@ -80,7 +80,7 @@ public class StorageManager extends SavedData {
     }
 
     public static StorageManager getInstance(MinecraftServer server) {
-        ServerLevel world = server.getLevel(ServerLevel.OVERWORLD);
-        return world.getDataStorage().computeIfAbsent(StorageManager::readNbt, StorageManager::new, Constants.MANAGER_NAME);
+        ServerWorld world = server.getWorld(ServerWorld.OVERWORLD);
+        return world.getPersistentStateManager().getOrCreate(StorageManager::readNbt, StorageManager::new, Constants.MANAGER_NAME);
     }
 }

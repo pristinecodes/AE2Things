@@ -1,0 +1,20 @@
+{
+  "type": "ae2things:crystal_growth_chamber",
+  "ingredients": {
+    "flawless": {
+      "item": "ae2:flawless_budding_quartz"
+    },
+    "flawed": {
+      "item": "ae2:flawed_budding_quartz"
+    },
+    "chipped": {
+      "item": "ae2:chipped_budding_quartz"
+    },
+    "damaged": {
+      "item": "ae2:damaged_budding_quartz"
+    }
+  },
+  "result": {
+    "item": "ae2:certus_quartz_crystal"
+  }
+}

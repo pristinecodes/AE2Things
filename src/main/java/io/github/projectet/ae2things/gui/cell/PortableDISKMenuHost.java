@@ -14,17 +14,17 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.screen.ScreenHandler;
 
 public class PortableDISKMenuHost extends ItemMenuHost implements IPortableTerminal {
 
-    private final BiConsumer<Player, ISubMenu> returnMainMenu;
+    private final BiConsumer<PlayerEntity, ISubMenu> returnMainMenu;
     private final MEStorage cellStorage;
     private final PortableDISKItem item;
 
-    public PortableDISKMenuHost(Player player, @Nullable Integer slot, PortableDISKItem diskItem, ItemStack itemStack, BiConsumer<Player, ISubMenu> returnMainMenu) {
+    public PortableDISKMenuHost(PlayerEntity player, @Nullable Integer slot, PortableDISKItem diskItem, ItemStack itemStack, BiConsumer<PlayerEntity, ISubMenu> returnMainMenu) {
         super(player, slot, itemStack);
         Preconditions.checkArgument(itemStack.getItem() == diskItem, "Stack doesn't match item");
         this.returnMainMenu = returnMainMenu;
@@ -45,7 +45,7 @@ public class PortableDISKMenuHost extends ItemMenuHost implements IPortableTermi
     }
 
     @Override
-    public boolean onBroadcastChanges(AbstractContainerMenu menu) {
+    public boolean onBroadcastChanges(ScreenHandler menu) {
         return ensureItemStillInSlot() && drainPower();
     }
 
@@ -56,7 +56,7 @@ public class PortableDISKMenuHost extends ItemMenuHost implements IPortableTermi
     }
 
     @Override
-    public void returnToMainMenu(Player player, ISubMenu subMenu) {
+    public void returnToMainMenu(PlayerEntity player, ISubMenu subMenu) {
         returnMainMenu.accept(player, subMenu);
     }
 
@@ -68,14 +68,14 @@ public class PortableDISKMenuHost extends ItemMenuHost implements IPortableTermi
     @Override
     public IConfigManager getConfigManager() {
         var out = new ConfigManager((manager, settingName) -> {
-            manager.writeToNBT(getItemStack().getOrCreateTag());
+            manager.writeToNBT(getItemStack().getOrCreateNbt());
         });
 
         out.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
 
-        out.readFromNBT(getItemStack().getOrCreateTag().copy());
+        out.readFromNBT(getItemStack().getOrCreateNbt().copy());
         return out;
     }
 }

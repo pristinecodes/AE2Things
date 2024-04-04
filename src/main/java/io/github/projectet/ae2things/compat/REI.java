@@ -10,10 +10,12 @@ import me.shedaniel.rei.api.client.registry.category.CategoryRegistry;
 import me.shedaniel.rei.api.client.registry.screen.ScreenRegistry;
 import me.shedaniel.rei.api.common.category.CategoryIdentifier;
 import me.shedaniel.rei.api.common.util.EntryStacks;
-import net.minecraft.core.Registry;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 
-public class REI implements REIClientPlugin {
+
+public class REI implements REIClientPlugin  {
 
     CategoryIdentifier<?> ID = CategoryIdentifier.of(AppEng.makeId("ae2.inscriber"));
 
@@ -27,8 +29,12 @@ public class REI implements REIClientPlugin {
 
     @Override
     public void registerCategories(CategoryRegistry registry) {
-        ItemStack inscriber = new ItemStack(Registry.ITEM.get(AE2Things.id("advanced_inscriber")));
+        ItemStack inscriber = new ItemStack(Registries.ITEM.get(AE2Things.id("advanced_inscriber")));
         registry.addWorkstations(ID, EntryStacks.of(inscriber));
         registry.setPlusButtonArea(ID, ButtonArea.defaultArea());
     }
 }
+
+//public class REI {
+//
+//}

@@ -15,9 +15,7 @@ import io.github.projectet.ae2things.item.PortableDISKItem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
-import net.minecraft.client.gui.screens.MenuScreens;
-
-import java.awt.*;
+import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 
 @Environment(EnvType.CLIENT)
 public class AE2ThingsClient implements IAEAddonEntrypoint {
@@ -25,7 +23,7 @@ public class AE2ThingsClient implements IAEAddonEntrypoint {
     @SuppressWarnings("RedundantTypeArguments")
     @Override
     public void onAe2Initialized() {
-        MenuScreens.<AdvancedInscriberMenu, AdvancedInscriberRootPanel>register(AdvancedInscriberMenu.ADVANCED_INSCRIBER_SHT, (menu, playerInv, title) -> {
+        ScreenRegistry.<AdvancedInscriberMenu, AdvancedInscriberRootPanel>register(AdvancedInscriberMenu.ADVANCED_INSCRIBER_SHT, (menu, playerInv, title) -> {
             ScreenStyle style;
             try {
                 style = StyleManager.loadStyleDoc("/screens/advanced_inscriber.json");
@@ -36,7 +34,7 @@ public class AE2ThingsClient implements IAEAddonEntrypoint {
 
             return new AdvancedInscriberRootPanel(menu, playerInv, title, style);
         });
-        MenuScreens.<CrystalGrowthMenu, CrystalGrowthRootPanel>register(CrystalGrowthMenu.CRYSTAL_GROWTH_SHT, (menu, playerInv, title) -> {
+        ScreenRegistry.<CrystalGrowthMenu, CrystalGrowthRootPanel>register(CrystalGrowthMenu.CRYSTAL_GROWTH_SHT, (menu, playerInv, title) -> {
             ScreenStyle style;
             try {
                 style = StyleManager.loadStyleDoc("/screens/crystal_growth.json");
@@ -49,8 +47,6 @@ public class AE2ThingsClient implements IAEAddonEntrypoint {
         });
 
         ColorProviderRegistry.ITEM.register(DISKDrive::getColor, AETItems.DISK_DRIVE_1K, AETItems.DISK_DRIVE_4K, AETItems.DISK_DRIVE_16K, AETItems.DISK_DRIVE_64K);
-        ColorProviderRegistry.ITEM.register(BasicStorageCell::getColor, AETItems.FLUID_CELL_256K, AETItems.FLUID_CELL_1024K, AETItems.FLUID_CELL_4096K, AETItems.ITEM_CELL_256K, AETItems.ITEM_CELL_1024K, AETItems.ITEM_CELL_4096K);
         ColorProviderRegistry.ITEM.register(PortableDISKItem::getColor, AETItems.PORTABLE_DISK_1K, AETItems.PORTABLE_DISK_4K, AETItems.PORTABLE_DISK_16K, AETItems.PORTABLE_DISK_64K);
-        ColorProviderRegistry.ITEM.register(PortableCellItem::getColor, AETItems.PORTABLE_ITEM_256K, AETItems.PORTABLE_ITEM_1024K, AETItems.PORTABLE_ITEM_4096K, AETItems.PORTABLE_FLUID_256K, AETItems.PORTABLE_FLUID_1024K, AETItems.PORTABLE_FLUID_4096K);
     }
 }
